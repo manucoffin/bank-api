@@ -12,6 +12,6 @@ import { SetReqUserMiddleware } from './auth/middlewares/set-req-user.middleware
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(SetReqUserMiddleware);
+    consumer.apply(SetReqUserMiddleware).forRoutes('users');
   }
 }

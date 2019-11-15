@@ -7,14 +7,14 @@ export class SetReqUserMiddleware implements NestMiddleware {
 
   use(req, res, next) {
     if (
-      req.headers.get('authorization') &&
-      req.headers.get('authorization').split(' ')[0] === 'Bearer'
+      req.headers.authorization &&
+      req.headers.authorization.split(' ')[0] === 'Bearer'
     ) {
-      const token = req.headers.get('authorization').split(' ')[1];
+      const token = req.headers.authorization.split(' ')[1];
 
       const legit = this.jwtService.verify(token);
 
-      req.payload = legit;
+      req.payload = legit ? this.jwtService.decode(token) : {};
       next();
     } else {
       return res.status(401).json('The access token is not valid.');

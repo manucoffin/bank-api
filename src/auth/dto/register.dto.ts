@@ -15,7 +15,7 @@ export class RegisterDto {
   @IsDefined()
   @IsString()
   @ApiModelProperty()
-  readonly genre: string;
+  readonly gender: string;
 
   @IsDefined()
   @IsString()

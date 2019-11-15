@@ -15,24 +15,26 @@ export class UsersService {
     this.users = [
       {
         id: 1,
+        token: null,
         accountNumber: '1111155555555M',
         username: 'test',
         pin: 123456,
         firstname: 'test',
         lastname: 'test',
-        genre: 'm',
+        gender: 'm',
         birthdate: '17/06/1993',
         address: '1 test street',
         balance: 1000,
       },
       {
         id: 2,
+        token: null,
         accountNumber: '2222255555555M',
         username: 'test2',
         pin: 123456,
         firstname: 'test2',
         lastname: 'test2',
-        genre: 'f',
+        gender: 'f',
         birthdate: '17/06/1993',
         address: '2 test street',
         balance: 500,
@@ -40,16 +42,23 @@ export class UsersService {
     ];
   }
 
-  async findOne(username: string): Promise<IUser | undefined> {
-    return this.users.find(user => user.username === username);
-  }
-
   async findOneById(accountNumber: string): Promise<IUser | undefined> {
     return this.users.find(user => user.accountNumber === accountNumber);
   }
 
   async create(userData: RegisterDto): Promise<IUserCredentials> {
-    return this.generateUserCredentials(userData);
+    const userCredentials = this.generateUserCredentials(userData);
+    this.users.push({
+      ...userData,
+      pin: userCredentials.pin,
+      accountNumber: userCredentials.accountNumber,
+      id: this.users.length + 1,
+      token: null,
+      username: `${userData.firstname} ${userData.lastname}`,
+      balance: 0,
+    });
+
+    return userCredentials;
   }
 
   private generateUserCredentials(userData: RegisterDto): IUserCredentials {
@@ -59,7 +68,24 @@ export class UsersService {
     };
   }
 
-  async updateBalance(accountNumber, data: UpdateBalanceDto): Promise<IUser> {
+  public async logout(accountNumber: string): Promise<void> {
+    this.users.map(u => {
+      if (u.accountNumber === accountNumber) {
+        u.token = null;
+        return u;
+      }
+    });
+  }
+
+  async updateBalance(
+    accountNumber,
+    ceiling,
+    data: UpdateBalanceDto,
+  ): Promise<IUser[]> {
+    if (data.amount > ceiling) {
+      throw new ForbiddenException('Ceiling exceeded.');
+    }
+
     const user = this.users.find(u => u.accountNumber === accountNumber);
 
     if (!user) {
@@ -78,7 +104,16 @@ export class UsersService {
         }
       });
 
-      return user;
+      return this.users;
     }
+  }
+
+  public setToken(accountNumber: string, token: string) {
+    this.users.map(u => {
+      if (u.accountNumber === accountNumber) {
+        u.token = token;
+        return u;
+      }
+    });
   }
 }

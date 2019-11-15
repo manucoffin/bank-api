@@ -1,4 +1,4 @@
-import { Body, Controller, Put, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { UpdateBalanceDto } from './dto/update-balance.dto';
 import {
   ApiOkResponse,
@@ -12,6 +12,7 @@ import {
 import { UsersService } from './users.service';
 import { IUser } from './interfaces/user.interface';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiUseTags('users')
 @Controller('users')
@@ -36,10 +37,19 @@ export class UsersController {
   @ApiUnauthorizedResponse({
     description: 'Action unauthorized.',
   })
-  updateBalance(@Req() req, @Body() payload: UpdateBalanceDto): Promise<IUser> {
+  updateBalance(
+    @Req() req,
+    @Body() payload: UpdateBalanceDto,
+  ): Promise<IUser[]> {
     return this.usersService.updateBalance(
       req.payload.token.accountNumber,
+      req.payload.token.ceiling,
       payload,
     );
+  }
+
+  @Post('transfer')
+  transfer() {
+    return this;
   }
 }

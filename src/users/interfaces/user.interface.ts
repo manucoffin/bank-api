@@ -1,10 +1,11 @@
 export interface IUser {
   id: number;
+  token: string;
   pin: number;
   username: string;
   firstname: string;
   lastname: string;
-  genre: string;
+  gender: string;
   birthdate: string;
   address: string;
   balance: number;

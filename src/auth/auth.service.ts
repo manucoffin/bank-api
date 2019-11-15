@@ -12,8 +12,6 @@ import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
-  token: any;
-
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
@@ -29,7 +27,7 @@ export class AuthService {
     password: number | undefined,
     hash: number | undefined,
   ): Promise<boolean> {
-    return bcrypt.compare(password, hash);
+    return bcrypt.compare('' + password, '' + hash);
   }
 
   /**
@@ -65,25 +63,22 @@ export class AuthService {
       throw new BadRequestException('Account number and pin are required.');
     }
 
-    const user = await this.usersService.findOne(accountNumber);
+    const user = await this.usersService.findOneById(accountNumber);
 
     if (user) {
-      if (await this.compareHash(pin, user.pin)) {
-        this.token = await this.createToken(user.accountNumber);
-        return this.token;
+      if (pin === user.pin) {
+        const token = await this.createToken(user.accountNumber);
+        this.usersService.setToken(user.accountNumber, token);
+
+        return token;
       }
     }
 
     throw new ForbiddenException('Invalid credentials.');
   }
 
-  public async signOut(): Promise<void> {
-    // delete token
-    return await this.deleteToken();
-  }
-
-  private async deleteToken(): Promise<void> {
-    this.token = null;
+  public async signOut(accountNumber: string): Promise<void> {
+    return await this.usersService.logout(accountNumber);
   }
 
   /**
@@ -100,8 +95,10 @@ export class AuthService {
    * @param payload -
    * @returns {boolean} - true if the token is valid
    */
-  public async validateToken(payload: IJwtPayload): Promise<boolean> {
-    const user = await this.usersService.findOneById(payload.accountNumber);
+  public async validateToken(payload: any): Promise<boolean> {
+    const user = await this.usersService.findOneById(
+      payload.token.accountNumber,
+    );
     return !!user;
   }
 }

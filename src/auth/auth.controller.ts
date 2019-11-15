@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
@@ -8,6 +8,8 @@ import {
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { SignInDto } from './dto/sign-in.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { SignOutDto } from './dto/sign-out.dto';
 
 @ApiUseTags('Auth')
 @Controller('auth')
@@ -25,15 +27,16 @@ export class AuthController {
     return this.authService.signIn(payload.accountNumber, payload.pin);
   }
 
-  @Get('logout')
+  @Post('logout')
+  @UseGuards(new JwtAuthGuard())
   @ApiOkResponse({
     description: 'Logged out.',
   })
   @ApiBadRequestResponse({
     description: 'Bad request.',
   })
-  logout(): Promise<void> {
-    return this.authService.signOut();
+  logout(@Req() req, @Body() payload: SignOutDto): Promise<void> {
+    return this.authService.signOut(req.payload.token.accountNumber);
   }
 
   @Post('register')
@@ -44,7 +47,6 @@ export class AuthController {
     description: 'Bad request.',
   })
   async register(@Body() registerDto: RegisterDto) {
-    // Pass the user entity to the service
     return this.authService.signUp(registerDto);
   }
 }
